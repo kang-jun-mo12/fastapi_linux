@@ -5,7 +5,6 @@ from decimal import Decimal, ROUND_HALF_UP
 
 app = FastAPI()
 
-# 학점 → 평점 매핑
 grade_map = {
     "A+": 4.5,
     "A": 4.0,
@@ -32,25 +31,22 @@ class StudentRequest(BaseModel):
 @app.post("/student_summary")
 async def calculate_summary(data: StudentRequest):
     total_credits = 0
-    total_points = 0.0
+    total_points = Decimal("0.0")
 
     for course in data.courses:
         credit = course.credits
         grade = grade_map.get(course.grade, 0.0)
         total_credits += credit
-        total_points += credit * grade
+        total_points += Decimal(str(credit * grade))
 
-    if total_credits > 0:
-        gpa_decimal = Decimal(str(total_points / total_credits))
-        gpa = float(gpa_decimal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
-    else:
-        gpa = 0.0
+    # 소수점 셋째 자리에서 반올림 (ROUND_HALF_UP)
+    gpa = Decimal(total_points / total_credits).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     return {
         "student_summary": {
             "student_id": data.student_id,
             "name": data.name,
-            "gpa": gpa,
+            "gpa": float(gpa),  # Swagger 문서에서 보기 좋게 숫자로 반환
             "total_credits": total_credits
         }
     }
