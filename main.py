@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
+from decimal import Decimal, ROUND_HALF_UP
 
 app = FastAPI()
 
+# 학점 → 평점 매핑
 grade_map = {
     "A+": 4.5,
     "A": 4.0,
@@ -38,7 +40,11 @@ async def calculate_summary(data: StudentRequest):
         total_credits += credit
         total_points += credit * grade
 
-    gpa = round(total_points / total_credits, 2) if total_credits > 0 else 0.0
+    if total_credits > 0:
+        gpa_decimal = Decimal(str(total_points / total_credits))
+        gpa = float(gpa_decimal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    else:
+        gpa = 0.0
 
     return {
         "student_summary": {
