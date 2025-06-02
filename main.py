@@ -28,7 +28,7 @@ class StudentRequest(BaseModel):
     name: str
     courses: List[Course]
 
-@app.post("/student_summary")
+@app.post("/score")
 async def calculate_summary(data: StudentRequest):
     total_credits = 0
     total_points = Decimal("0.0")
